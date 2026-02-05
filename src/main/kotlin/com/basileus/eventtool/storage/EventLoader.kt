@@ -47,11 +47,17 @@ class EventLoader(private val config: EventToolStorageConfig) {
         val forbiddenOutcomes = mutableListOf<String>()
         val producedOutcomes = mutableMapOf<String, MutableList<String>>()
 
-        // Extract multi-line arrays first using regex
-        val requiredOutcomesAnyMatch = Regex("""required_outcomes_any\s*=\s*\[([\s\S]*?)\](?=\s*\n\s*\w)""").find(content)
-        if (requiredOutcomesAnyMatch != null) {
-            val arrayContent = "[${requiredOutcomesAnyMatch.groupValues[1]}]"
-            parseNestedArray(arrayContent).forEach { requiredOutcomesAny.add(it) }
+        // Extract multi-line arrays using regex (only if array spans multiple lines)
+        var requiredOutcomesAnyParsed = false
+        val multiLineMatch = Regex("""required_outcomes_any\s*=\s*\[\s*\n([\s\S]*?)\]""").find(content)
+        if (multiLineMatch != null) {
+            // Multi-line format: parse the full content
+            val fullMatch = Regex("""required_outcomes_any\s*=\s*(\[\s*\n[\s\S]*?\n\s*\])""").find(content)
+            if (fullMatch != null) {
+                val parsed = parseNestedArray(fullMatch.groupValues[1].replace("\n", "").replace(" ", ""))
+                parsed.forEach { requiredOutcomesAny.add(it) }
+                requiredOutcomesAnyParsed = true
+            }
         }
 
         var currentSection = ""
@@ -109,8 +115,8 @@ class EventLoader(private val config: EventToolStorageConfig) {
                                 parseStringArray(value).forEach { forbiddenOutcomes.add(it) }
                             }
                             "required_outcomes_any" -> {
-                                // Handle single-line format (multi-line handled above)
-                                if (value.contains("]]")) {
+                                // Handle single-line format only (multi-line handled above)
+                                if (!requiredOutcomesAnyParsed && value.contains("]]")) {
                                     parseNestedArray(value).forEach { requiredOutcomesAny.add(it) }
                                 }
                             }
@@ -197,15 +203,15 @@ class EventLoader(private val config: EventToolStorageConfig) {
             when (char) {
                 '[' -> {
                     depth++
-                    if (depth > 1) current.append(char)
+                    // Don't include brackets in current - we only want the contents
                 }
                 ']' -> {
-                    depth--
-                    if (depth >= 1) current.append(char)
-                    if (depth == 1 && current.isNotEmpty()) {
-                        results.add(parseStringArray("[$current]"))
+                    if (depth == 2 && current.isNotEmpty()) {
+                        // Closing an inner array - parse what we have
+                        results.add(parseStringArray("[${current}]"))
                         current = StringBuilder()
                     }
+                    depth--
                 }
                 ',' -> {
                     if (depth == 1) {
@@ -214,7 +220,7 @@ class EventLoader(private val config: EventToolStorageConfig) {
                         current.append(char)
                     }
                 }
-                else -> if (depth >= 1) current.append(char)
+                else -> if (depth >= 2) current.append(char)
             }
         }
 
