@@ -34,3 +34,10 @@ Reads from `../basileus-content/`:
 - `ui/components/GraphCanvas.kt` - Graph rendering
 - `storage/EventLoader.kt` - Parse event TOMLs
 - `storage/GraphBuilder.kt` - Build dependency graph
+
+## Future Features
+- **Validation Mode** - Report content errors:
+  - Orphan outcomes (produced but never required)
+  - Missing producers (required but never produced)
+  - Year conflicts (event requires outcome from later event)
+- **TOML Library** - Replace manual parsing with `tomlkt` for robustness
