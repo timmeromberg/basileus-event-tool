@@ -47,10 +47,15 @@ class EventLoader(private val config: EventToolStorageConfig) {
         val forbiddenOutcomes = mutableListOf<String>()
         val producedOutcomes = mutableMapOf<String, MutableList<String>>()
 
+        // Extract multi-line arrays first using regex
+        val requiredOutcomesAnyMatch = Regex("""required_outcomes_any\s*=\s*\[([\s\S]*?)\](?=\s*\n\s*\w)""").find(content)
+        if (requiredOutcomesAnyMatch != null) {
+            val arrayContent = "[${requiredOutcomesAnyMatch.groupValues[1]}]"
+            parseNestedArray(arrayContent).forEach { requiredOutcomesAny.add(it) }
+        }
+
         var currentSection = ""
         var currentResultLabel = ""
-        var inOutcomesAny = false
-        var inOutcomesSet = false
 
         content.lines().forEach { line ->
             val trimmed = line.trim()
@@ -104,7 +109,10 @@ class EventLoader(private val config: EventToolStorageConfig) {
                                 parseStringArray(value).forEach { forbiddenOutcomes.add(it) }
                             }
                             "required_outcomes_any" -> {
-                                parseNestedArray(value).forEach { requiredOutcomesAny.add(it) }
+                                // Handle single-line format (multi-line handled above)
+                                if (value.contains("]]")) {
+                                    parseNestedArray(value).forEach { requiredOutcomesAny.add(it) }
+                                }
                             }
                         }
                         "result" -> when (key) {
