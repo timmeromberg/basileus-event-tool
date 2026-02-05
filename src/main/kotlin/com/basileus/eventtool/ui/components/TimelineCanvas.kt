@@ -50,9 +50,16 @@ fun TimelineCanvas(
         calculateEventPositions(filteredEvents, scale, offset)
     }
 
-    val relevantEdges = remember(edges, filteredEvents) {
+    val relevantEdges = remember(edges, filteredEvents, selectedEventId) {
         val eventIds = filteredEvents.map { it.id }.toSet()
-        edges.filter { it.fromEventId in eventIds && it.toEventId in eventIds }
+        val visibleEdges = edges.filter { it.fromEventId in eventIds && it.toEventId in eventIds }
+
+        // If an event is selected, only show edges connected to it
+        if (selectedEventId != null) {
+            visibleEdges.filter { it.fromEventId == selectedEventId || it.toEventId == selectedEventId }
+        } else {
+            visibleEdges
+        }
     }
 
     Canvas(
