@@ -68,6 +68,9 @@ fun EventToolUI(koin: Koin) {
                     events = graphState.events,
                     edges = graphState.edges,
                     onClose = { viewModel.selectEvent(null) },
+                    onUpdateYears = { eventId, minYear, maxYear ->
+                        viewModel.updateEventYears(eventId, minYear, maxYear)
+                    },
                     modifier = Modifier.width(280.dp)
                 )
             }
@@ -154,11 +157,65 @@ private fun FilterPanel(
 
         // Year range
         Text("Year Range", color = EventToolTheme.textSecondary, fontSize = 12.sp)
-        Text(
-            "${filter.yearRange.first} - ${filter.yearRange.last}",
-            color = EventToolTheme.textPrimary,
-            fontSize = 14.sp
-        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            var startText by remember(filter.yearRange.first) { mutableStateOf(filter.yearRange.first.toString()) }
+            var endText by remember(filter.yearRange.last) { mutableStateOf(filter.yearRange.last.toString()) }
+
+            OutlinedTextField(
+                value = startText,
+                onValueChange = { value ->
+                    startText = value
+                    val start = value.toIntOrNull() ?: return@OutlinedTextField
+                    if (start <= filter.yearRange.last) {
+                        onFilterChange(filter.copy(yearRange = start..filter.yearRange.last))
+                    }
+                },
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                label = { Text("Start", fontSize = 10.sp) },
+                textStyle = LocalTextStyle.current.copy(
+                    color = EventToolTheme.textPrimary,
+                    fontSize = 12.sp
+                ),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    textColor = EventToolTheme.textPrimary,
+                    cursorColor = EventToolTheme.textHighlight,
+                    focusedBorderColor = EventToolTheme.textHighlight,
+                    unfocusedBorderColor = EventToolTheme.textSecondary,
+                    focusedLabelColor = EventToolTheme.textHighlight,
+                    unfocusedLabelColor = EventToolTheme.textSecondary
+                )
+            )
+            OutlinedTextField(
+                value = endText,
+                onValueChange = { value ->
+                    endText = value
+                    val end = value.toIntOrNull() ?: return@OutlinedTextField
+                    if (end >= filter.yearRange.first) {
+                        onFilterChange(filter.copy(yearRange = filter.yearRange.first..end))
+                    }
+                },
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                label = { Text("End", fontSize = 10.sp) },
+                textStyle = LocalTextStyle.current.copy(
+                    color = EventToolTheme.textPrimary,
+                    fontSize = 12.sp
+                ),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    textColor = EventToolTheme.textPrimary,
+                    cursorColor = EventToolTheme.textHighlight,
+                    focusedBorderColor = EventToolTheme.textHighlight,
+                    unfocusedBorderColor = EventToolTheme.textSecondary,
+                    focusedLabelColor = EventToolTheme.textHighlight,
+                    unfocusedLabelColor = EventToolTheme.textSecondary
+                )
+            )
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -287,6 +344,7 @@ private fun DetailPanel(
     events: Map<String, EventNode>,
     edges: List<EventEdge>,
     onClose: () -> Unit,
+    onUpdateYears: (String, Int?, Int?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (event == null) return
@@ -330,8 +388,79 @@ private fun DetailPanel(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text("Year: ${event.displayYear}", color = EventToolTheme.textPrimary, fontSize = 12.sp)
+        // Editable year fields
+        Text("Year Range", color = EventToolTheme.textSecondary, fontSize = 11.sp)
+        Spacer(modifier = Modifier.height(4.dp))
+
+        var minYearText by remember(event.id, event.minYear) { mutableStateOf(event.minYear?.toString() ?: "") }
+        var maxYearText by remember(event.id, event.maxYear) { mutableStateOf(event.maxYear?.toString() ?: "") }
+        var yearsDirty by remember(event.id) { mutableStateOf(false) }
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                value = minYearText,
+                onValueChange = { minYearText = it; yearsDirty = true },
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                label = { Text("Min", fontSize = 9.sp) },
+                textStyle = LocalTextStyle.current.copy(
+                    color = EventToolTheme.textPrimary,
+                    fontSize = 11.sp
+                ),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    textColor = EventToolTheme.textPrimary,
+                    cursorColor = EventToolTheme.textHighlight,
+                    focusedBorderColor = EventToolTheme.textHighlight,
+                    unfocusedBorderColor = EventToolTheme.textSecondary,
+                    focusedLabelColor = EventToolTheme.textHighlight,
+                    unfocusedLabelColor = EventToolTheme.textSecondary
+                )
+            )
+            OutlinedTextField(
+                value = maxYearText,
+                onValueChange = { maxYearText = it; yearsDirty = true },
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                label = { Text("Max", fontSize = 9.sp) },
+                textStyle = LocalTextStyle.current.copy(
+                    color = EventToolTheme.textPrimary,
+                    fontSize = 11.sp
+                ),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    textColor = EventToolTheme.textPrimary,
+                    cursorColor = EventToolTheme.textHighlight,
+                    focusedBorderColor = EventToolTheme.textHighlight,
+                    unfocusedBorderColor = EventToolTheme.textSecondary,
+                    focusedLabelColor = EventToolTheme.textHighlight,
+                    unfocusedLabelColor = EventToolTheme.textSecondary
+                )
+            )
+        }
+
+        if (yearsDirty) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(EventToolTheme.textHighlight, RoundedCornerShape(4.dp))
+                    .clickable {
+                        val newMin = minYearText.toIntOrNull()
+                        val newMax = maxYearText.toIntOrNull()
+                        onUpdateYears(event.id, newMin, newMax)
+                        yearsDirty = false
+                    }
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Save Years", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+
         event.location?.let {
+            Spacer(modifier = Modifier.height(4.dp))
             Text("Location: $it", color = EventToolTheme.textPrimary, fontSize = 12.sp)
         }
 

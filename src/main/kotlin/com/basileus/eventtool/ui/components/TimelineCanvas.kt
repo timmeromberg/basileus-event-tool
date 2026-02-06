@@ -46,8 +46,8 @@ fun TimelineCanvas(
         events.filter { filter.matches(it) }
     }
 
-    val eventPositions = remember(filteredEvents, scale, offset) {
-        calculateEventPositions(filteredEvents, scale, offset)
+    val eventPositions = remember(filteredEvents, filter.yearRange, scale, offset) {
+        calculateEventPositions(filteredEvents, filter.yearRange.first, scale, offset)
     }
 
     val relevantEdges = remember(edges, filteredEvents, selectedEventId) {
@@ -84,7 +84,7 @@ fun TimelineCanvas(
             }
     ) {
         // Draw year axis with headers
-        drawYearAxis(scale, offset, textMeasurer)
+        drawYearAxis(filter.yearRange.first, filter.yearRange.last, scale, offset, textMeasurer)
 
         // Draw lane labels
         drawLaneLabels(scale, offset, textMeasurer)
@@ -103,11 +103,11 @@ fun TimelineCanvas(
 
 private fun calculateEventPositions(
     events: List<EventNode>,
+    minYear: Int,
     scale: Float,
     offset: Offset
 ): List<EventPosition> {
     val positions = mutableListOf<EventPosition>()
-    val minYear = 1025
     val width = EventToolTheme.nodeWidth * scale
     val height = EventToolTheme.nodeHeight * scale
 
@@ -146,12 +146,12 @@ private fun calculateEventPositions(
 }
 
 private fun DrawScope.drawYearAxis(
+    minYear: Int,
+    maxYear: Int,
     scale: Float,
     offset: Offset,
     textMeasurer: androidx.compose.ui.text.TextMeasurer
 ) {
-    val minYear = 1025
-    val maxYear = 1085
     val headerY = 30f + offset.y
     val canvasHeight = size.height
 

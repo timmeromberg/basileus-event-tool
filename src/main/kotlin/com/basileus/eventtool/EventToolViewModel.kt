@@ -2,6 +2,7 @@ package com.basileus.eventtool
 
 import com.basileus.eventtool.model.*
 import com.basileus.eventtool.storage.EventLoader
+import com.basileus.eventtool.storage.EventWriter
 import com.basileus.eventtool.storage.OutcomeLoader
 import com.basileus.eventtool.storage.GraphBuilder
 import kotlinx.coroutines.CoroutineScope
@@ -31,6 +32,7 @@ enum class ViewMode {
 
 class EventToolViewModel(
     private val eventLoader: EventLoader,
+    private val eventWriter: EventWriter,
     private val outcomeLoader: OutcomeLoader,
     private val graphBuilder: GraphBuilder
 ) {
@@ -78,5 +80,14 @@ class EventToolViewModel(
 
     fun updateFilter(filter: GraphFilter) {
         _graphState.value = _graphState.value.copy(filter = filter)
+    }
+
+    fun updateEventYears(eventId: String, minYear: Int?, maxYear: Int?) {
+        val event = _graphState.value.events[eventId] ?: return
+        val filePath = event.filePath ?: return
+        scope.launch {
+            eventWriter.updateEventYears(filePath, minYear, maxYear)
+            loadData()
+        }
     }
 }

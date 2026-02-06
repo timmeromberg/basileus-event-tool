@@ -12,7 +12,8 @@ data class EventNode(
     val requiredOutcomes: List<String>,
     val requiredOutcomesAny: List<List<String>>,
     val forbiddenOutcomes: List<String>,
-    val producedOutcomes: Map<String, List<String>>  // resultLabel -> outcomes set
+    val producedOutcomes: Map<String, List<String>>,  // resultLabel -> outcomes set
+    val filePath: String? = null
 ) {
     val yearRange: IntRange?
         get() = if (minYear != null && maxYear != null) minYear..maxYear

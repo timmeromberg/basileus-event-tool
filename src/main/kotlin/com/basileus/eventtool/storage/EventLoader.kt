@@ -167,7 +167,8 @@ class EventLoader(private val config: EventToolStorageConfig) {
             requiredOutcomes = requiredOutcomes,
             requiredOutcomesAny = requiredOutcomesAny,
             forbiddenOutcomes = forbiddenOutcomes,
-            producedOutcomes = producedOutcomes
+            producedOutcomes = producedOutcomes,
+            filePath = file.absolutePath
         )
     }
 
