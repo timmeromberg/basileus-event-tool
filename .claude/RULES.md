@@ -21,8 +21,10 @@
 - State classes are immutable data classes
 - Use `copy()` for updates
 
-## Read-Only Tool
-This tool only reads content files - no writing/editing.
+## Content Editing
+- Year editing writes directly to TOML files via `EventWriter`
+- All writes use targeted line replacement (not full TOML rewrite)
+- Other fields remain read-only for now
 
 ## Code Quality
 - [ ] No hardcoded colors (use theme)

@@ -2,7 +2,7 @@
 
 @.claude/RULES.md
 
-Read-only visualization tool for content creators to explore event relationships via outcomes.
+Visualization and editing tool for content creators to explore event relationships via outcomes.
 
 ## Tech Stack
 - Kotlin + Compose Desktop
@@ -26,6 +26,7 @@ Reads from `../basileus-content/`:
 - Search events and outcomes
 - Timeline presets (Maniakes, Schism, etc.)
 - Detail panel showing requirements/productions
+- Edit event min/max year from detail panel (saves to TOML)
 
 ## Key Files
 - `EventToolMain.kt` - Entry point
@@ -34,6 +35,7 @@ Reads from `../basileus-content/`:
 - `ui/components/GraphCanvas.kt` - Graph rendering
 - `storage/EventLoader.kt` - Parse event TOMLs
 - `storage/GraphBuilder.kt` - Build dependency graph
+- `storage/EventWriter.kt` - Write year changes to TOML
 
 ## Future Features
 - **Validation Mode** - Report content errors:
