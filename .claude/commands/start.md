@@ -1,3 +1,8 @@
+---
+name: start
+description: Build and launch the event relationship visualization tool (Compose Desktop). Shows event chains, outcome dependencies, and timeline view.
+---
+
 # Run Event Tool
 
 Build and launch the event visualization tool.

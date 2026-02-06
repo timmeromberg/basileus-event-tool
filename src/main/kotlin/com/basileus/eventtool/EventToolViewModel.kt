@@ -43,6 +43,10 @@ class EventToolViewModel(
         loadData()
     }
 
+    fun refresh() {
+        loadData()
+    }
+
     private fun loadData() {
         scope.launch {
             val events = eventLoader.loadAllEvents()

@@ -28,7 +28,8 @@ fun EventToolUI(koin: Koin) {
         // Top bar
         TopBar(
             viewMode = graphState.viewMode,
-            onViewModeChange = { viewModel.setViewMode(it) }
+            onViewModeChange = { viewModel.setViewMode(it) },
+            onRefresh = { viewModel.refresh() }
         )
 
         // Main content
@@ -85,7 +86,8 @@ fun EventToolUI(koin: Koin) {
 @Composable
 private fun TopBar(
     viewMode: ViewMode,
-    onViewModeChange: (ViewMode) -> Unit
+    onViewModeChange: (ViewMode) -> Unit,
+    onRefresh: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -103,6 +105,7 @@ private fun TopBar(
         )
 
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            ViewModeButton("Refresh", false) { onRefresh() }
             ViewModeButton("Timeline", viewMode == ViewMode.TIMELINE) {
                 onViewModeChange(ViewMode.TIMELINE)
             }
